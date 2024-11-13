@@ -14,12 +14,14 @@ func main() {
 		panic("failed to connect database")
 	}
 	db.AutoMigrate(&users.User{})
-	id := users.Create(db, "Raphael")
-	users.Update(db, id, "joão")
-	userList := users.List(db)
+	service := users.UserService{DB: db}
+
+	id := service.Create("Raphael")
+	service.Update(id, "joão")
+	userList := service.List()
 	for _, user := range userList {
 		fmt.Println(user.Name)
 	}
-	users.Delete(db, id)
-	users.List(db)
+	service.Delete(id)
+	service.List()
 }
