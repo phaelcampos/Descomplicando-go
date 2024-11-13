@@ -1,28 +1,41 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 )
 
+var CurrentVersion = "desenvolvimento"
+
+var packages = flag.String("packages", "kubectl", "Pacotes a serem instalados, separados por virgula. Valores possiveis: Kubectl")
+
 func main() {
+	flag.Parse()
+	fmt.Println("Packages ", *packages)
+	fmt.Println("Versão: ", CurrentVersion)
 
-	// Instalar o kubectl
-	//suportar linux e macOS
-	// Exemplo!!
+	packageArr := strings.Split(*packages, ",")
 
-	// Linux:
+	for _, p := range packageArr {
+		switch p {
+		case "kubectl":
+			{
+				fmt.Println("Instalando kubectl")
+				command, args := GetKubeCTLInstallCommand()
+				cmd := exec.Command(command, args...)
 
-	// MacOS: bew install kubectl
-	fmt.Println("Instalando kubectl...")
+				err := cmd.Run()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		default:
+			fmt.Println("Pacote", p, "não suportado pelo nosso script")
+		}
 
-	command, args := GetKubeCTLInstallCommand()
-	cmd := exec.Command(command, args...)
-
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
 	}
 
 }
