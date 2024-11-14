@@ -1,42 +1,48 @@
 package tokens
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/cristalhq/jwt/v5"
+	jwt "github.com/cristalhq/jwt/v4"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-func TestGenerate(t *testing.T) {
-	token := Generate()
-	fmt.Println(token)
-	if token == "" {
-		t.Error("Token Vazio")
-	}
-
-	if len(token) < 100 {
-		t.Error("Token Muito curto")
-	}
-
-	if len(token) > 1000 {
-		t.Error("Token Muito longo")
-	}
-
+func TestTokenGenerator(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Token Generator Suite")
 }
 
-func TestVerifyToken(t *testing.T) {
-	token := Generate()
-	key := []byte(`secret`)
-	verifier, err := jwt.NewVerifierHS(jwt.HS256, key)
-	if err != nil {
-		t.Error("Falhou na verificação")
-	}
-	newToken, err := jwt.Parse([]byte(token), verifier)
-	if err != nil {
-		t.Error("Falhou ao fazer o parse")
-	}
-	if newToken == nil {
-		t.Error("Token não pode ser nulo")
-	}
-	newToken.Claims()
-}
+var _ = Describe("Token Generator", func() {
+	Context("When token gets generated", func() {
+		token := Generate()
+		It("Expect token to exist and be generated successfuly", func() {
+			Expect(token).ShouldNot(BeEmpty())
+			Expect(len(token)).ShouldNot(BeNumerically("<", 100))
+			Expect(len(token)).ShouldNot(BeNumerically(">", 1000))
+		})
+
+		Context("and we are verifying it", func() {
+			It("with the right secret", func() {
+				key := []byte(`secret`)
+				verifier, err := jwt.NewVerifierHS(jwt.HS256, key)
+
+				Expect(err).ToNot(HaveOccurred())
+
+				newToken, err := jwt.Parse([]byte(token), verifier)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(newToken).ToNot(BeNil())
+			})
+			It("with the wrong secret", func() {
+				key := []byte(`different-secret`)
+				verifier, err := jwt.NewVerifierHS(jwt.HS256, key)
+				Expect(err).ToNot(HaveOccurred())
+
+				newToken, err := jwt.Parse([]byte(token), verifier)
+				Expect(err).To(HaveOccurred())
+				Expect(newToken).To(BeNil())
+			})
+		})
+	})
+})
